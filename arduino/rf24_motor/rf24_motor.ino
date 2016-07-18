@@ -5,18 +5,24 @@
 #include <SPI.h>
 #include "RF24.h"
 
+#include <Servo.h>
+Servo myservo;  // create servo object to control a servo
+#define SERVO_UP 120
+#define SERVO_DOWN 0
+
+
 #define LED_PIN 8
 // MAX MOTOR SPEED, 1.0 = full speed 0.25 = quarter speed
 #define MAX_MOTOR_SPEED 1.0
 // Max change in motor speed per loop
 #define MAX_ACCEL 10     
-
+#define MAX_BUTTONS 10
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
-Adafruit_DCMotor *motorLeft = AFMS.getMotor(3);
-Adafruit_DCMotor *motorRight = AFMS.getMotor(4);
+Adafruit_DCMotor *motorLeft = AFMS.getMotor(4);
+Adafruit_DCMotor *motorRight = AFMS.getMotor(3);
 
-RF24 radio(9,10);
+RF24 radio(6,7);
 byte addresses[][6] = {"1Node","2Node"};
 
 int speed_l_current;
@@ -26,6 +32,7 @@ struct t_data {
   int16_t speed_l;
   int16_t speed_r;
   uint16_t msg_id;
+  bool button[MAX_BUTTONS];
 };
 
 t_data d;
@@ -48,6 +55,7 @@ void setup() {
   last_trans_time = millis();
   speed_l_current = 0;
   speed_r_current = 0;
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
 }
 
 void loop() {
@@ -92,17 +100,17 @@ void loop() {
       motorRight->setSpeed( abs( speed_r_current * MAX_MOTOR_SPEED ) );
 
       if( speed_l_current > 0) {
-        motorLeft->run(FORWARD);
-      } else if( speed_l_current < 0) {
         motorLeft->run(BACKWARD);
+      } else if( speed_l_current < 0) {
+        motorLeft->run(FORWARD);
       } else {
         motorLeft->run(RELEASE);
       }
       
       if( speed_r_current > 0) {
-        motorRight->run(FORWARD);
-      } else if( speed_r_current < 0) {
         motorRight->run(BACKWARD);
+      } else if( speed_r_current < 0) {
+        motorRight->run(FORWARD);
       } else {
         motorRight->run(RELEASE);
       }
@@ -118,6 +126,11 @@ void loop() {
       Serial.print("  msg_id=");
       Serial.println(d.msg_id);
 
+   if( d.button[0] == 1 ) {
+      myservo.write(SERVO_DOWN);
+   } else {
+      myservo.write(SERVO_UP);
+   }
    if (millis() - last_trans_time > 150) {
       Serial.println("No data recieved, stopping");
       speed_l_current = 0;
