@@ -1,8 +1,8 @@
 $fn=30;
 handle_r = 8;
-handle_l = 90;
-head_r = 15;
-head_l = 30;
+handle_l = 125;
+head_r = 20;
+head_l = 40;
 pin_r = 4;
 pin_rtol = 0.3;   // gap between pin and the hole
 pin_ltol = 0.3;  // gap betwen the pin ends and the hinge
