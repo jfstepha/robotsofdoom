@@ -6,11 +6,11 @@
 #include "RF24.h"
 #include <Servo.h>
 
-#define RADIO_CHANNEL 2
+#define RADIO_CHANNEL 4
 
 Servo myservo;  // create servo object to control a servo
-#define SERVO_UP 180
-#define SERVO_DOWN 0
+#define SERVO_UP 0
+#define SERVO_DOWN 180
 
 
 #define LED_PIN 8
@@ -117,6 +117,8 @@ void loop() {
    }
 
    // translate joystick x/y into motor speed
+
+   /*
    f_x1 = d.x1 * 2.0 / JOY_AXIS_MAX - 1.0;
    f_y1 = d.y1 * 2.0 / JOY_AXIS_MAX - 1.0;
    speed_l = (f_y1 + f_x1 * 0.5) * MAX_MOTOR;
@@ -131,6 +133,9 @@ void loop() {
       Serial.print(speed_r);
       Serial.print("  msg_id=");
       Serial.println(d.msg_id);
+   */
+   speed_l = (d.y1 * 2.0 / JOY_AXIS_MAX - 1.0) * MAX_MOTOR;
+   speed_r = (d.y2 * 2.0 / JOY_AXIS_MAX - 1.0) * MAX_MOTOR;
    
    
       if ( speed_l  > speed_l_current ) {
@@ -170,7 +175,7 @@ void loop() {
    if( d.button[1] == 0 ) {
       //Serial.println("Servo down:");
       myservo.write(SERVO_DOWN);
-      //Serial.println("done.");
+      //Serial.println("done.");f
    } else {
       //Serial.println("Servo up:");
        myservo.write(SERVO_UP);
