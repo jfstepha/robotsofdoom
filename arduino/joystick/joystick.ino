@@ -8,7 +8,12 @@
 #define P_B4 5
 #define P_B5 8
 #define P_B6 9
-#define MAX_BUTTONS 10
+#define P_B7 A4
+#define P_B8 A5
+#define P_B9 A6
+#define P_B10 A7
+#define MAX_BUTTONS 11 // array starts at 0, but we're only using 1-10
+#define LED_PIN 10
 
 
 #include <SPI.h>
@@ -16,7 +21,7 @@
 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(6,7);
-#define RADIO_CHANNEL 2
+#define RADIO_CHANNEL 3
 byte addresses[][6] = {"1Node","2Node"};
 
 struct t_data {
@@ -37,6 +42,11 @@ void setup() {
   int i;
   
   Serial.begin(115200);
+  Serial.print("Joystick starting on channel ");
+  Serial.print( RADIO_CHANNEL );
+  Serial.println(".");
+
+  pinMode(LED_PIN, OUTPUT);
 
   pinMode( P_X1, INPUT );
   pinMode( P_Y1, INPUT );
@@ -48,6 +58,10 @@ void setup() {
   pinMode( P_B4, INPUT_PULLUP );
   pinMode( P_B5, INPUT_PULLUP );
   pinMode( P_B6, INPUT_PULLUP );
+  pinMode( P_B7, INPUT_PULLUP );
+  pinMode( P_B8, INPUT_PULLUP );
+  pinMode( P_B9, INPUT_PULLUP );
+  pinMode( P_B10, INPUT_PULLUP );
 
   radio.begin();
   radio.setPayloadSize(sizeof(t_data));
@@ -69,8 +83,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   int x1,y1, x2, y2;
-  bool b1,b2,b3,b4,b5,b6;
+  bool b1,b2,b3,b4,b5,b6,b7,b8,b9,b10;
   int response;
+  digitalWrite(LED_PIN, HIGH);
 
   x1 = analogRead( P_X1 );
   y1 = analogRead( P_Y1 );
@@ -84,8 +99,17 @@ void loop() {
   b4 = digitalRead( P_B4 );
   b5 = digitalRead( P_B5 );
   b6 = digitalRead( P_B6 );
+  b7 = digitalRead( P_B7 );
+  b8 = digitalRead( P_B8 );
 
-  Serial.print("X1:");
+  // Pins analog 6 and analog 7 do not have internal pullups!
+  // they need explicit resistors added in the circuit.
+  //b9 = digitalRead( P_B9 );
+  //b10 = digitalRead( P_B10 );
+  b9 = analogRead( P_B9 ) > 250 ? 1 : 0;
+  b10 = analogRead( P_B10 ) > 250  ? 1 : 0;
+
+  Serial.print(" X1:");
   Serial.print(x1);
   Serial.print(" Y1:");
   Serial.print(y1);
@@ -103,6 +127,13 @@ void loop() {
   Serial.print(b4);
   Serial.print(b5);
   Serial.print(b6);
+  Serial.print(b7);
+  Serial.print(b8);
+  Serial.print(b9);
+  Serial.print(b10);
+  Serial.print(" ");
+  Serial.print(digitalRead(P_B9));
+  Serial.print(digitalRead(P_B10));
 
   Serial.println("");
 
@@ -116,7 +147,13 @@ void loop() {
   d.button[4] = b4;
   d.button[5] = b5;
   d.button[6] = b6;
+  d.button[7] = b7;
+  d.button[8] = b8;
+  d.button[9] = b9;
+  d.button[10] = b10;
   d.msg_id = msg_id++;
+
+  digitalWrite(LED_PIN, LOW);
 
   radio.stopListening();
   radio.write( &d, sizeof(t_data) );
@@ -129,5 +166,5 @@ void loop() {
     Serial.print( "got response");
     Serial.println( response );
   }
-  delay(100);
+  delay(10);
 }
