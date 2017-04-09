@@ -21,8 +21,8 @@
 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(6,7);
-#define RADIO_CHANNEL 3
-byte addresses[][6] = {"1Node","2Node"};
+#define RADIO_CHANNEL 5
+byte addresses[][6] = {"1abcd","2abcd"};
 
 struct t_data {
   uint16_t msg_id;
@@ -64,11 +64,12 @@ void setup() {
   pinMode( P_B10, INPUT_PULLUP );
 
   radio.begin();
-  radio.setPayloadSize(sizeof(t_data));
+//  radio.setPayloadSize(sizeof(t_data));
   radio.setPALevel(RF24_PA_HIGH);
   radio.openWritingPipe(addresses[0]);
   radio.openReadingPipe(1,addresses[1]);
   radio.setChannel(RADIO_CHANNEL);
+  radio.stopListening();
 
   d.x1=0;
   d.y1=0;
@@ -135,7 +136,7 @@ void loop() {
   Serial.print(digitalRead(P_B9));
   Serial.print(digitalRead(P_B10));
 
-  Serial.println("");
+  //Serial.println("");
 
   d.x1 = x1;
   d.y1 = y1;
@@ -154,17 +155,41 @@ void loop() {
   d.msg_id = msg_id++;
 
   digitalWrite(LED_PIN, LOW);
+  
+  unsigned long start_time = micros();   
 
-  radio.stopListening();
-  radio.write( &d, sizeof(t_data) );
-//  Serial.println("Sent d");
-  radio.startListening();
-
-  delay(1);
-  while(radio.available()) {
-    radio.read( &response, sizeof(unsigned long));
-    Serial.print( "got response");
-    Serial.println( response );
+//  radio.stopListening();
+  
+  if (!radio.write( &d, sizeof(t_data) )){
+    Serial.print(F(" SEND FAILED "));
+  } else {
+    Serial.print(F(" sndOK"));
   }
-  delay(10);
+  Serial.println("Sent d");
+//  radio.startListening();
+
+ 
+//     unsigned long started_waiting_at = micros();               // Set up a timeout period, get the current microseconds
+//    boolean timeout = false;                                   // Set up a variable to indicate if a response was received or not
+    
+//    while ( ! radio.available() ){                             // While nothing is received
+//      if (micros() - started_waiting_at > 20000 ){            // If waited longer than 200ms, indicate timeout and exit while loop
+//          timeout = true;
+//          break;
+//      }      
+//    }
+//
+//    if ( timeout ){                                             // Describe the results
+//        Serial.println(F("Failed, response timed out."));
+//    }else{
+//        unsigned long got_time;                                 // Grab the response, compare, and send to debugging spew
+//        radio.read( &got_time, sizeof(unsigned long) );
+//        unsigned long end_time = micros();
+//        Serial.print(F(", resp:"));
+//        Serial.print(got_time);
+//        Serial.print(F(", rtd:"));
+//        Serial.print(end_time-start_time);
+//        Serial.println("");
+//    }
+//    delay(1);
 }

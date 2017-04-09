@@ -1,0 +1,33 @@
+{	"extensionName": "RF24 Joystick",
+	"description": "Implements an RF24 interface for wireless joystick",
+	"version": "1.0",
+	"author": "Jon Stephan(jfstepha@gmail.com)",
+	"homepage": "www.doomrobotics.com",
+	"sort":0,
+	"javascriptURL":"js/rf24_joystick.js",
+    "firmware":"1.0",
+    "extensionPort":0,
+	"blockSpecs": [
+		["h","RF24 Joystick","runArduino"],
+		[
+			"r",
+			"read joystick axis( %d.axis )",
+			"readJoystickAxis",
+			"1",
+			{
+				"setup":"SETUP_RADIO;\nt_data d;\nunsigned long msg_id;",
+				"inc":"#include <SPI.h>\n#include <RF24.h>\n#include \"rf24_joystick.h\"\n",
+				"def":""
+				"work":"d.{0}"
+				"loop":"while (radio.available() ) { \n    Serial.print("Got something");\n    radio.read( &d, sizeof(t_data) );\n    msg_id = d.msg_id;\n  } \nradio.stopListening();\nradio.write( &msg_id, sizeof(unsigned long) ); \nradio.startListening();\n "
+			}
+		],
+	],
+	"menus": {
+        "axis":["x1","y1","x2","y2"]
+	},
+	"values":{
+	},
+	"translators":{
+	}
+}

@@ -1,0 +1,32 @@
+{	"extensionName": "Digital Pullup",
+	"description": "Implements digital pullup pins for Arduino",
+	"version": "1.0",
+	"author": "Jon Stephan(jfstepha@gmail.com)",
+	"homepage": "www.doomrobotics.com",
+	"sort":0,
+	"javascriptURL":"js/digital_pullup.js",
+  "firmware":"1.0",
+  "extensionPort":0,
+	"blockSpecs": [
+		["h","Digital Pullup","runArduino"],
+		[
+			"r",
+			"read pullup pin( %n )",
+			"readPullup",
+			"1",
+			{
+				"setup":"pinMode({0},INPUT_PULLUP);\n\n",
+				"inc":"",
+				"def":"",
+				"work":"digitalRead({0})",
+				"loop":""
+			}
+		],
+	],
+	"menus": {
+	},
+	"values":{
+	},
+	"translators":{
+	}
+}

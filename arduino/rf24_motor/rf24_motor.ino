@@ -6,33 +6,36 @@
 #include "RF24.h"
 #include <Servo.h>
 
-#define RADIO_CHANNEL 2
+#define RADIO_CHANNEL 5
+#define SERVO_BUTTON 6  
 
 Servo myservo;  // create servo object to control a servo
-#define SERVO_UP 180
-#define SERVO_DOWN 0
+#define SERVO_UP 20
+#define SERVO_DOWN 80
 
 
+#define KILLSWITCH_PIN A0
 #define LED_PIN 8
 // MAX MOTOR SPEED, 1.0 = full speed 0.25 = quarter speed
 #define MAX_MOTOR_SPEED 1.0
+
 
 // The max speed the motor driver takes
 #define MAX_MOTOR 255 
 #define MIN_MOTOR -255
 
 // Max change in motor speed per loop
-#define MAX_ACCEL 10     
-#define MAX_BUTTONS 10
+#define MAX_ACCEL 25     
+#define MAX_BUTTONS 11
 #define JOY_AXIS_MAX 1024
 
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
-Adafruit_DCMotor *motorLeft = AFMS.getMotor(3);
-Adafruit_DCMotor *motorRight = AFMS.getMotor(4);
+Adafruit_DCMotor *motorLeft = AFMS.getMotor(4);
+Adafruit_DCMotor *motorRight = AFMS.getMotor(3);
 
 RF24 radio(6,7);
-byte addresses[][6] = {"1Node","2Node"};
+byte addresses[][6] = {"1abcd","2abcd"};
 
 
 int speed_l_current;
@@ -52,6 +55,7 @@ unsigned long last_trans_time;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
+  pinMode(KILLSWITCH_PIN, INPUT_PULLUP);
   Serial.begin(115200);
 
   Serial.print( "Robot starting" );
@@ -61,8 +65,8 @@ void setup() {
   AFMS.begin();
   
   radio.begin();
-  radio.setPayloadSize(sizeof(t_data));
-  radio.setPALevel(RF24_PA_HIGH);
+//  radio.setPayloadSize(sizeof(t_data));
+  radio.setPALevel(RF24_PA_MIN);
   radio.openWritingPipe(addresses[1]);
   radio.openReadingPipe(1,addresses[0]);
   radio.setChannel(RADIO_CHANNEL);
@@ -70,7 +74,7 @@ void setup() {
   last_trans_time = millis();
   speed_l_current = 0;
   speed_r_current = 0;
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(10);  // attaches the servo on pin 9 to the servo object
 }
 
 void loop() {
@@ -81,6 +85,22 @@ void loop() {
     int speed_l, speed_r;
     
     digitalWrite( LED_PIN, 0);
+//    Serial.print("Killswitch:");
+//    Serial.print( digitalRead(KILLSWITCH_PIN));
+//    Serial.println();
+    if( digitalRead( KILLSWITCH_PIN) == 1) {
+      Serial.println("Killswitch detected!");
+      motorLeft->setSpeed( 0 );
+      motorRight->setSpeed( 0 );
+
+      for(i=0; i<15; i++){
+        Serial.println("Killswitch loop");
+        digitalWrite( LED_PIN, 0);
+        delay(250);
+        digitalWrite( LED_PIN, 1);
+        delay(250);
+      }
+    }
     
     if( radio.available()){
       digitalWrite( LED_PIN, 1);
@@ -107,11 +127,11 @@ void loop() {
       }
 
       
-      radio.stopListening();                                        // First, stop listening so we can talk   
-      radio.write( &msg_id, sizeof(unsigned long) );              // Send the final one back.      
-      radio.startListening();                                       // Now, resume listening so we catch the next packets.     
-      Serial.print(F(" Sent response "));
-      Serial.print(msg_id);  
+//      radio.stopListening();                                        // First, stop listening so we can talk   
+//      radio.write( &msg_id, sizeof(unsigned long) );              // Send the final one back.      
+//      radio.startListening();                                       // Now, resume listening so we catch the next packets.     
+//      Serial.print(F(" Sent response "));
+//      Serial.print(msg_id);  
 
       
    }
@@ -167,7 +187,7 @@ void loop() {
       } 
       delay(10);
 
-   if( d.button[1] == 0 ) {
+   if( d.button[SERVO_BUTTON] == 0 ) {
       //Serial.println("Servo down:");
       myservo.write(SERVO_DOWN);
       //Serial.println("done.");
@@ -184,16 +204,16 @@ void loop() {
        motorRight->run(RELEASE); 
        motorLeft->run(RELEASE); 
        digitalWrite( LED_PIN, 1);
-       delay(150);
+       delay(10);
        radio.begin();
        radio.setChannel(RADIO_CHANNEL);
-       radio.setPayloadSize(sizeof(t_data));
-       radio.setPALevel(RF24_PA_HIGH);
+//       radio.setPayloadSize(sizeof(t_data));
+//       radio.setPALevel(RF24_PA_HIGH);
        radio.openWritingPipe(addresses[1]);
        radio.openReadingPipe(1,addresses[0]);
        radio.startListening();
 
        digitalWrite( LED_PIN, 0);
-       delay(150);
+       delay(10);
    }
 }
